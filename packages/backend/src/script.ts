@@ -22,7 +22,7 @@ async function main() {
 
   const alchemy = new Alchemy(config)
 
-  const res = await alchemy.core.getAssetTransfers({
+  const transactionList = await alchemy.core.getAssetTransfers({
     category: [
       AssetTransfersCategory.EXTERNAL,
       AssetTransfersCategory.ERC1155,
@@ -38,7 +38,16 @@ async function main() {
     maxCount: 1000,
   })
 
-  console.log(res.transfers.map((t) => t))
+  const detailedTransactions = transactionList.transfers.map((t) =>
+    alchemy.core.getTransaction(t.hash),
+  )
+
+  const res = (await Promise.all(detailedTransactions)).filter((t) =>
+    t?.data.startsWith(selector),
+  )
+
+  console.log(res)
+  // console.log(res.transfers.map((t) => t))
 
   // const etherscanProvider = new ethers.providers.EtherscanProvider(
   //   'homestead',
