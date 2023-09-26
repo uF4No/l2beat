@@ -9,45 +9,69 @@
 //    &sort=asc
 //    &apikey=YourApiKeyToken
 
-import { ethers } from 'ethers'
-import { writeFileSync } from 'fs'
+import { Alchemy, AssetTransfersCategory, Network, toHex } from 'alchemy-sdk'
 
 async function main() {
   const address = '0x3dB52cE065f728011Ac6732222270b3F2360d919'
   const selector = '0x7739cbe7'
 
-  const etherscanProvider = new ethers.providers.EtherscanProvider(
-    'homestead',
-    'RC2W28PYNA2EUU86RJW52W2QXDXF13EWFK',
-  )
-  const blockRanges = getBlockRanges(18031264, 18213199)
-
-  const results: {
-    txHash: string
-    blockNumber: number | undefined
-    data: string
-  }[] = []
-  for (const blockRange of blockRanges) {
-    const history = await etherscanProvider.getHistory(
-      address,
-      blockRange.startBlock,
-      blockRange.endBlock,
-    )
-    history.forEach((tx) => {
-      if (tx.data.startsWith(selector)) {
-        results.push({
-          txHash: tx.hash,
-          blockNumber: tx.blockNumber,
-          data: tx.data,
-        })
-      }
-    })
-    writeFileSync(
-      './test.csv',
-      results.map((d) => Object.values(d).join(';')).join('\n'),
-    )
-    console.log(results)
+  const config = {
+    apiKey: 'RHadMy3sqeQwwTFRakv1Ln8xelYFct0t',
+    network: Network.ETH_MAINNET,
   }
+
+  const alchemy = new Alchemy(config)
+
+  const res = await alchemy.core.getAssetTransfers({
+    category: [
+      AssetTransfersCategory.EXTERNAL,
+      AssetTransfersCategory.ERC1155,
+      AssetTransfersCategory.ERC20,
+      AssetTransfersCategory.ERC721,
+      AssetTransfersCategory.INTERNAL,
+      AssetTransfersCategory.SPECIALNFT,
+    ],
+    toAddress: address,
+    withMetadata: true,
+    fromBlock: toHex(18218996),
+    excludeZeroValue: false,
+    maxCount: 1000,
+  })
+
+  console.log(res.transfers.map((t) => t))
+
+  // const etherscanProvider = new ethers.providers.EtherscanProvider(
+  //   'homestead',
+  //   'RC2W28PYNA2EUU86RJW52W2QXDXF13EWFK',
+  // )
+  // const blockRanges = getBlockRanges(18031264, 18213199)
+
+  // const results: {
+  //   txHash: string
+  //   blockNumber: number | undefined
+  //   data: string
+  // }[] = []
+  // for (const blockRange of blockRanges) {
+  //   const history = await etherscanProvider.getHistory(
+  //     address,
+  //     blockRange.startBlock,
+  //     blockRange.endBlock,
+  //   )
+  //   history.forEach((tx) => {
+  //     if (tx.data.startsWith(selector)) {
+  //       results.push({
+  //         txHash: tx.hash,
+  //         blockNumber: tx.blockNumber,
+  //         data: tx.data,
+  //       })
+  //     }
+  //   })
+  //   writeFileSync(
+  //     './test.csv',
+  //     results.map((d) => Object.values(d).join(';')).join('\n'),
+  //   )
+  //   console.log(results)
+  // }
 }
 
 main().catch(console.error)
