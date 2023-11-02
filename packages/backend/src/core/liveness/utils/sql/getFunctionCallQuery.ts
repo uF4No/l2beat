@@ -1,4 +1,5 @@
 import { EthereumAddress, UnixTime } from '@l2beat/shared-pure'
+import { knex } from 'knex'
 
 import { LivenessFunctionCall } from '../../types/LivenessConfig'
 
@@ -11,6 +12,48 @@ export function getFunctionCallQuery(
   const methodSelectors = functionCallsConfig.map((m) =>
     m.selector.toLowerCase(),
   )
+
+  const db = knex({
+    client: 'pg',
+  })
+
+  const query = db
+    .select(
+      'block_number',
+      db.raw('LEFT(input, 10) AS input'),
+      'to_address',
+      'block_timestamp',
+      'transaction_hash',
+    )
+    .from(db.raw('bigquery-public-data.crypto_ethereum.traces'))
+    .where(db.raw('call_type = ?', ['call']))
+    .where(db.raw('status = ?', [1]))
+    .andWhere(
+      db.raw('block_timestamp >= ?', [
+        db.raw('TIMESTAMP(?)', [from.toDate().toISOString()]),
+      ]),
+    )
+    .andWhere(
+      db.raw('block_timestamp < ?', [
+        db.raw('TIMESTAMP(?)', [to.toDate().toISOString()]),
+      ]),
+    )
+    .orderByRaw('block_timestamp ?', [db.raw('asc')])
+
+  addresses.forEach((address, index) => {
+    query
+      .orWhere((builder) => {
+        builder
+          .where('to_address', address)
+          .andWhere(db.raw('LEFT(input, 10) = ?', [methodSelectors[index]]))
+          .catch(() => {})
+      })
+      .catch(() => {})
+  })
+
+  console.log(query.toQuery())
+
+  // Order the results
 
   return [
     'SELECT',

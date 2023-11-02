@@ -5,7 +5,7 @@ import { LivenessFunctionCall } from '../../types/LivenessConfig'
 import { getFunctionCallQuery } from './getFunctionCallQuery'
 
 describe(getFunctionCallQuery.name, () => {
-  it('should return valid SQL query', () => {
+  it.only('should return valid SQL query', () => {
     const config: LivenessFunctionCall[] = [
       {
         projectId: ProjectId('project-1'), // irrelevant
