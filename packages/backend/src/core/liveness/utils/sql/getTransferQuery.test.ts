@@ -5,7 +5,7 @@ import { LivenessTransfer } from '../../types/LivenessConfig'
 import { getTransferQuery } from './getTransferQuery'
 
 describe('getTransferQuery', () => {
-  it('should return valid SQL query', () => {
+  it.only('should return valid SQL query', () => {
     const config: LivenessTransfer[] = [
       {
         projectId: ProjectId('project-1'), // irrelevant
@@ -56,6 +56,7 @@ describe('getTransferQuery', () => {
     ].join('\n')
 
     const result = getTransferQuery(config, startTimestamp, endTimestamp)
+    console.log(result)
     expect(result).toEqual(expectedQuery)
   })
 })
